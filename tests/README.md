@@ -34,6 +34,7 @@ sets its exit code accordingly.
 | `test_arch_tricore.js` | TriCore (little-endian), 32-bit register path (`Number`) | That the TriCore target (added in the 2.1.4 port) is compiled in and its TCI translate/helper/adapter path works (incl. its >4K page size). |
 | `test_hooks.js` | `UC_HOOK_INSN` for `syscall` | The variadic `uc_hook_add` path — `src/unicorn-wrapper.js` hand-builds the wasm32 `va_list` buffer that carries the instruction id. |
 | `test_helpers.js` | x86-64 `div` (`helper_divq_EAX` / `helper_divl_EAX`) | The QEMU adapter-helper machinery (+ coupled `tcg/tcg.c` 64-bit-arg patch). TCI dispatches every helper through one fixed signature; without the adapters this `call_indirect` traps with `null function or function signature mismatch`. |
+| `test_mem_read.js` | Byte patterns, unaligned ranges, page boundaries, owned copies and failed reads | Bulk memory reads preserve bytes and errors, and free their temporary buffer even when the native call throws. |
 
 The two "function pointer" patches above (`glib`, adapters) and the variadic
 `uc_hook_add` handling are WASM `call_indirect` requirements, not asm.js-era

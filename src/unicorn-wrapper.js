@@ -268,28 +268,24 @@ Object.assign(Module, {
         }
 
         this.mem_read = function (address, size) {
-            // Allocate space for the output value
             var buffer_ptr = Module._malloc(size);
-            for (var i = 0; i < size; i++) {
-                Module.setValue(buffer_ptr + i, 0, 'i8');
+            try {
+                var handle = Module.getValue(this.handle_ptr, '*');
+                var ret = Module.ccall('uc_mem_read', 'number',
+                    ['pointer', 'number', 'pointer', 'number'],
+                    [handle, BigInt(address || 0), buffer_ptr, BigInt(size || 0)]
+                );
+                if (ret != Module.ERR_OK) {
+                    var error = 'Unicorn.js: Function uc_mem_read failed with code ' + ret + ':\n' + Module.strerror(ret);
+                    throw error;
+                }
+                // Copy from the current view after native allocation; the result owns its bytes.
+                var buffer = new Uint8Array(size);
+                buffer.set(HEAPU8.subarray(buffer_ptr, buffer_ptr + buffer.length));
+                return buffer;
+            } finally {
+                Module._free(buffer_ptr);
             }
-
-            var handle = Module.getValue(this.handle_ptr, '*');
-            var ret = Module.ccall('uc_mem_read', 'number',
-                ['pointer', 'number', 'pointer', 'number'],
-                [handle, BigInt(address || 0), buffer_ptr, BigInt(size || 0)]
-            );
-            // Get register value, free memory and handle return code
-            var buffer = new Uint8Array(size);
-            for (var i = 0; i < size; i++) {
-                buffer[i] = Module.getValue(buffer_ptr + i, 'i8');
-            }
-            Module._free(buffer_ptr);
-            if (ret != Module.ERR_OK) {
-                var error = 'Unicorn.js: Function uc_mem_read failed with code ' + ret + ':\n' + Module.strerror(ret);
-                throw error;
-            }
-            return buffer;
         }
 
         this.mem_map = function (address, size, perms) {
