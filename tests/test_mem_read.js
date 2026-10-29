@@ -40,6 +40,10 @@ require(distPath)().then((uc) => {
       assert.deepStrictEqual(freed, allocated);
       assert.strictEqual(allocated.length, 1);
 
+      assert.throws(() => e.mem_read(address, 1.5), RangeError);
+      assert.deepStrictEqual(freed, allocated);
+      assert.strictEqual(allocated.length, 2);
+
       const failure = new Error('controlled native-call failure');
       uc.ccall = (name, ...args) => {
         if (name === 'uc_mem_read') throw failure;
@@ -47,7 +51,7 @@ require(distPath)().then((uc) => {
       };
       assert.throws(() => e.mem_read(address, 4), (error) => error === failure);
       assert.deepStrictEqual(freed, allocated);
-      assert.strictEqual(allocated.length, 2);
+      assert.strictEqual(allocated.length, 3);
     } finally {
       uc._malloc = allocate;
       uc._free = free;
